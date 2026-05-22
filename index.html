@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Les Horloges</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="bg"></canvas>
+  <main>
+
+    <div class="clock-block">
+      <canvas class="clock" id="c1" width="280" height="280"></canvas>
+      <p class="label">Heure des bizarres</p>
+      <div class="legend invisible">
+        <div class="legend-item"><span class="dot"></span><span>–</span></div>
+        <div class="legend-item"><span class="dot"></span><span>–</span></div>
+        <div class="legend-item"><span class="dot"></span><span>–</span></div>
+        <div class="legend-item"><span class="dot"></span><span>–</span></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="clock-block">
+      <canvas class="clock" id="c2" width="280" height="280"></canvas>
+      <p class="label">Heure des normaux</p>
+      <div class="legend">
+        <div class="legend-item">
+          <span class="dot" style="background:#c8b97a"></span>
+          <span>Matin <em>13h–18h</em></span>
+        </div>
+        <div class="legend-item">
+          <span class="dot" style="background:#7a9cb8"></span>
+          <span>Après-midi <em>19h–24h</em></span>
+        </div>
+        <div class="legend-item">
+          <span class="dot" style="background:#b87a9c"></span>
+          <span>Soir <em>1h–6h</em></span>
+        </div>
+        <div class="legend-item">
+          <span class="dot" style="background:#7ab8a0"></span>
+          <span>Nuit <em>7h–12h</em></span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+  <script src="clock.js"></script>
+</body>
+</html>
