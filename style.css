@@ -6,6 +6,7 @@
   --black:  #080808;
   --border: #2a2a2a;
   --gray-2: #606060;
+  --clock-size: min(280px, 72vw);
 }
 
 html, body { width: 100%; height: 100%; background: var(--black); }
@@ -20,7 +21,6 @@ main {
   justify-content: center;
 }
 
-/* ── Desktop : côte à côte ── */
 .clock-block {
   display: flex;
   flex-direction: column;
@@ -41,21 +41,17 @@ main {
   border: 0.5px solid var(--border); border-radius: 2px; z-index: -1;
 }
 
-.clock-wrap {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
+/* taille fixée en CSS, carrée, jamais rectangulaire */
 .clock {
   display: block;
-  width: min(280px, 70vw);
-  height: min(280px, 70vw);
+  width: var(--clock-size);
+  height: var(--clock-size);
+  flex-shrink: 0;
 }
 
 .label {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(0.85rem, 2vw, 1rem);
+  font-size: clamp(0.85rem, 2.5vw, 1rem);
   letter-spacing: 0.22em;
   color: var(--gray-2);
   text-transform: uppercase;
@@ -67,7 +63,6 @@ main {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 6px 12px;
-  margin-top: 4px;
   flex-shrink: 0;
 }
 
@@ -76,7 +71,7 @@ main {
 .legend-item {
   display: flex; align-items: center; gap: 6px;
   font-family: 'DM Mono', monospace;
-  font-size: clamp(0.6rem, 1.5vw, 0.68rem);
+  font-size: clamp(0.6rem, 2vw, 0.68rem);
   font-weight: 300;
   color: #555;
   white-space: nowrap;
@@ -100,11 +95,28 @@ main {
   flex-shrink: 0;
 }
 
+/* ── Tablette ── */
+@media (min-width: 601px) and (max-width: 900px) {
+  :root { --clock-size: min(240px, 38vw); }
+}
+
+/* ── Desktop large ── */
+@media (min-width: 901px) {
+  :root { --clock-size: 280px; }
+  main { align-items: center; }
+  .clock-block { flex: none; width: 380px; }
+  .divider { height: 420px; align-self: auto; }
+}
+
 /* ── Mobile : empilé ── */
 @media (max-width: 600px) {
+  :root { --clock-size: min(260px, 78vw); }
+
   main {
     flex-direction: column;
     align-items: center;
+    padding: 2rem 0;
+    gap: 0;
   }
 
   .clock-block {
@@ -114,35 +126,12 @@ main {
     padding: 2rem 1.5rem;
   }
 
-  .clock {
-    width: min(260px, 80vw);
-    height: min(260px, 80vw);
-  }
-
-  .legend {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .legend.invisible {
-    display: none;
-  }
+  .legend.invisible { display: none; }
 
   .divider {
-    width: min(260px, 80vw);
+    width: min(240px, 70vw);
     height: 0.5px;
     align-self: center;
     background: linear-gradient(to right, transparent, var(--border), transparent);
-  }
-}
-
-/* ── Tablette ── */
-@media (min-width: 601px) and (max-width: 900px) {
-  .clock {
-    width: min(240px, 38vw);
-    height: min(240px, 38vw);
-  }
-
-  .clock-block {
-    padding: 2rem 1.5rem;
   }
 }

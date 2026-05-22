@@ -3,12 +3,11 @@ const bgCanvas = document.getElementById('bg');
 const bgCtx    = bgCanvas.getContext('2d');
 let W, H, particles = [], lines = [];
 
-function resize() {
+function resizeBg() {
   W = bgCanvas.width  = window.innerWidth;
   H = bgCanvas.height = window.innerHeight;
-  syncClockSizes();
 }
-window.addEventListener('resize', () => { resize(); initParticles(); });
+window.addEventListener('resize', () => { resizeBg(); initParticles(); syncCanvases(); });
 
 function rnd(a, b) { return a + Math.random() * (b - a); }
 
@@ -52,37 +51,47 @@ function drawBg() {
   bgCtx.fillStyle=gr; bgCtx.fillRect(0,0,W,H);
 }
 
-/* ── CLOCK SIZE SYNC ─────────────────────────────────────────────────────── */
-// Lit la taille CSS du canvas et synchronise les attributs width/height
-function syncClockSizes() {
+/* ── SYNC CANVAS SIZE ─────────────────────────────────────────────────────── */
+// Lit la taille CSS (qui est forcée carrée) et applique aux attributs width/height
+// On multiplie par devicePixelRatio pour éviter le flou sur écrans Retina
+function syncCanvases() {
+  const dpr = window.devicePixelRatio || 1;
   [c1, c2].forEach(c => {
-    if (!c) return;
-    const rect = c.getBoundingClientRect();
-    const s    = Math.round(rect.width);
-    if (s > 0) { c.width = s; c.height = s; }
+    const cssSize = c.getBoundingClientRect().width;
+    if (cssSize > 0) {
+      const px = Math.round(cssSize * dpr);
+      c.width  = px;
+      c.height = px;
+      // on laisse le CSS gérer la taille d'affichage
+      c.style.width  = cssSize + 'px';
+      c.style.height = cssSize + 'px';
+    }
   });
 }
 
-/* ── HORLOGE 12H (bizarres) ───────────────────────────────────────────────── */
+/* ── HORLOGE 12H ──────────────────────────────────────────────────────────── */
 function drawClock12(canvas, date) {
-  const S=canvas.width; if (!S) return;
-  const ctx=canvas.getContext('2d'), cx=S/2, cy=S/2, r=S/2-S*0.05;
-  ctx.clearRect(0,0,S,S);
+  const dpr = window.devicePixelRatio || 1;
+  const ctx  = canvas.getContext('2d');
+  const S    = canvas.width;
+  if (!S) return;
+  const cx = S/2, cy = S/2, r = S/2 - S*0.05;
 
+  ctx.clearRect(0,0,S,S);
   ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle='#0f0f0f'; ctx.fill();
-  ctx.strokeStyle='#2a2a2a'; ctx.lineWidth=1; ctx.stroke();
+  ctx.strokeStyle='#2a2a2a'; ctx.lineWidth=dpr; ctx.stroke();
 
   for (let i=0; i<60; i++) {
     const ang=(i/60)*Math.PI*2-Math.PI/2, isH=i%5===0;
-    const out=r-1, inn=isH?r-r*0.12:r-r*0.06;
+    const out=r-dpr, inn=isH?r-r*0.12:r-r*0.06;
     ctx.beginPath(); ctx.moveTo(cx+Math.cos(ang)*inn,cy+Math.sin(ang)*inn); ctx.lineTo(cx+Math.cos(ang)*out,cy+Math.sin(ang)*out);
-    ctx.strokeStyle=isH?'#555':'#272727'; ctx.lineWidth=isH?1.3:0.6; ctx.stroke();
+    ctx.strokeStyle=isH?'#555':'#272727'; ctx.lineWidth=isH?1.5*dpr:0.6*dpr; ctx.stroke();
   }
 
-  const fs = Math.max(8, S * 0.04);
-  ctx.font=`300 ${fs}px "DM Mono",monospace`; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
   for (let i=1; i<=12; i++) {
     const ang=(i/12)*Math.PI*2-Math.PI/2;
+    ctx.font=`300 ${r*0.13}px "DM Mono",monospace`;
     ctx.fillStyle='#484848';
     ctx.fillText(i, cx+Math.cos(ang)*(r-r*0.2), cy+Math.sin(ang)*(r-r*0.2));
   }
@@ -95,57 +104,57 @@ function drawClock12(canvas, date) {
   function hand(ang,len,w,col,tail){
     ctx.save(); ctx.lineCap='round';
     ctx.beginPath(); ctx.moveTo(cx-Math.cos(ang)*tail,cy-Math.sin(ang)*tail); ctx.lineTo(cx+Math.cos(ang)*len,cy+Math.sin(ang)*len);
-    ctx.strokeStyle=col; ctx.lineWidth=w; ctx.stroke(); ctx.restore();
+    ctx.strokeStyle=col; ctx.lineWidth=w*dpr; ctx.stroke(); ctx.restore();
   }
-  hand(hA,r*0.50,r*0.013,'#d0ccc4',r*0.06);
-  hand(mA,r*0.70,r*0.009,'#909090',r*0.07);
-  hand(sA,r*0.82,r*0.004,'#ffffff',r*0.08);
+  hand(hA, r*0.50, 3, '#d0ccc4', r*0.06);
+  hand(mA, r*0.70, 2, '#909090', r*0.07);
+  hand(sA, r*0.82, 1, '#ffffff', r*0.08);
   ctx.beginPath(); ctx.arc(cx,cy,r*0.032,0,Math.PI*2); ctx.fillStyle='#ffffff'; ctx.fill();
   ctx.beginPath(); ctx.arc(cx,cy,r*0.013,0,Math.PI*2); ctx.fillStyle='#0f0f0f'; ctx.fill();
 }
 
-/* ── HORLOGE 24H (normaux) ────────────────────────────────────────────────── */
+/* ── HORLOGE 24H ──────────────────────────────────────────────────────────── */
 const ZONES = [
-  { label:'Matin',      from:13, to:18, color:'#c8b97a' },
-  { label:'Après-midi', from:19, to:24, color:'#7a9cb8' },
-  { label:'Soir',       from: 1, to: 6, color:'#b87a9c' },
-  { label:'Nuit',       from: 7, to:12, color:'#7ab8a0' },
+  { from:13, to:18, color:'#c8b97a' },
+  { from:19, to:24, color:'#7a9cb8' },
+  { from: 1, to: 6, color:'#b87a9c' },
+  { from: 7, to:12, color:'#7ab8a0' },
 ];
-
 function h24ToAngle(h) { return (h/24)*Math.PI*2 - Math.PI/2; }
 
 function drawClock24(canvas, date) {
-  const S=canvas.width; if (!S) return;
-  const ctx=canvas.getContext('2d'), cx=S/2, cy=S/2, r=S/2-S*0.05;
+  const dpr = window.devicePixelRatio || 1;
+  const ctx  = canvas.getContext('2d');
+  const S    = canvas.width;
+  if (!S) return;
+  const cx = S/2, cy = S/2, r = S/2 - S*0.05;
+
   ctx.clearRect(0,0,S,S);
-
   ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle='#0f0f0f'; ctx.fill();
-  ctx.strokeStyle='#2a2a2a'; ctx.lineWidth=1; ctx.stroke();
+  ctx.strokeStyle='#2a2a2a'; ctx.lineWidth=dpr; ctx.stroke();
 
-  const rO=r-1, rI=r-r*0.145;
+  const rO=r-dpr, rI=r-r*0.15;
   ZONES.forEach(z => {
     const a1=h24ToAngle(z.from), a2=h24ToAngle(z.to);
     ctx.beginPath(); ctx.arc(cx,cy,rO,a1,a2,false); ctx.arc(cx,cy,rI,a2,a1,true); ctx.closePath();
-    ctx.fillStyle=z.color; ctx.globalAlpha=0.28; ctx.fill();
-    ctx.globalAlpha=1;
+    ctx.fillStyle=z.color; ctx.globalAlpha=0.28; ctx.fill(); ctx.globalAlpha=1;
     ctx.beginPath(); ctx.arc(cx,cy,rO,a1,a2,false); ctx.arc(cx,cy,rI,a2,a1,true); ctx.closePath();
-    ctx.strokeStyle=z.color; ctx.lineWidth=0.8; ctx.globalAlpha=0.55; ctx.stroke(); ctx.globalAlpha=1;
+    ctx.strokeStyle=z.color; ctx.lineWidth=0.8*dpr; ctx.globalAlpha=0.55; ctx.stroke(); ctx.globalAlpha=1;
   });
 
-  for (let i=0; i<24*2; i++) {
-    const ang=(i/(24*2))*Math.PI*2-Math.PI/2, isH=i%2===0;
-    const out=r-1, inn=isH?r-r*0.145:r-r*0.08;
+  for (let i=0; i<48; i++) {
+    const ang=(i/48)*Math.PI*2-Math.PI/2, isH=i%2===0;
+    const out=r-dpr, inn=isH?r-r*0.15:r-r*0.08;
     ctx.beginPath(); ctx.moveTo(cx+Math.cos(ang)*inn,cy+Math.sin(ang)*inn); ctx.lineTo(cx+Math.cos(ang)*out,cy+Math.sin(ang)*out);
-    ctx.strokeStyle=isH?'#484848':'#242424'; ctx.lineWidth=isH?1.2:0.5; ctx.stroke();
+    ctx.strokeStyle=isH?'#484848':'#242424'; ctx.lineWidth=isH?1.2*dpr:0.5*dpr; ctx.stroke();
   }
 
-  const fs = Math.max(7, S * 0.032);
   ctx.textAlign='center'; ctx.textBaseline='middle';
   for (let i=0; i<24; i+=2) {
-    const ang=h24ToAngle(i), tx=cx+Math.cos(ang)*(r-r*0.23), ty=cy+Math.sin(ang)*(r-r*0.23);
+    const ang=h24ToAngle(i), tx=cx+Math.cos(ang)*(r-r*0.24), ty=cy+Math.sin(ang)*(r-r*0.24);
     let col='#3a3a3a';
     ZONES.forEach(z=>{ if(i>=z.from&&i<z.to) col=z.color; if(z.to===24&&i>=z.from) col=z.color; });
-    ctx.font=`300 ${fs}px "DM Mono",monospace`; ctx.fillStyle=col;
+    ctx.font=`300 ${r*0.11}px "DM Mono",monospace`; ctx.fillStyle=col;
     ctx.fillText(i===0?'0':i, tx, ty);
   }
 
@@ -157,27 +166,32 @@ function drawClock24(canvas, date) {
   function hand(ang,len,w,col,tail){
     ctx.save(); ctx.lineCap='round';
     ctx.beginPath(); ctx.moveTo(cx-Math.cos(ang)*tail,cy-Math.sin(ang)*tail); ctx.lineTo(cx+Math.cos(ang)*len,cy+Math.sin(ang)*len);
-    ctx.strokeStyle=col; ctx.lineWidth=w; ctx.stroke(); ctx.restore();
+    ctx.strokeStyle=col; ctx.lineWidth=w*dpr; ctx.stroke(); ctx.restore();
   }
-  hand(hA,r*0.50,r*0.013,'#d0ccc4',r*0.06);
-  hand(mA,r*0.70,r*0.009,'#909090',r*0.07);
-  hand(sA,r*0.82,r*0.004,'#ffffff',r*0.08);
+  hand(hA, r*0.50, 3, '#d0ccc4', r*0.06);
+  hand(mA, r*0.70, 2, '#909090', r*0.07);
+  hand(sA, r*0.82, 1, '#ffffff', r*0.08);
   ctx.beginPath(); ctx.arc(cx,cy,r*0.032,0,Math.PI*2); ctx.fillStyle='#ffffff'; ctx.fill();
   ctx.beginPath(); ctx.arc(cx,cy,r*0.013,0,Math.PI*2); ctx.fillStyle='#0f0f0f'; ctx.fill();
 }
 
-/* ── LOOP ─────────────────────────────────────────────────────────────────── */
-const c1=document.getElementById('c1');
-const c2=document.getElementById('c2');
+/* ── INIT & LOOP ──────────────────────────────────────────────────────────── */
+const c1 = document.getElementById('c1');
+const c2 = document.getElementById('c2');
 
-resize();
+resizeBg();
 initParticles();
+
+// Attendre que le CSS soit appliqué avant de lire les tailles
+requestAnimationFrame(() => {
+  syncCanvases();
+  loop();
+});
 
 function loop() {
   drawBg();
-  const now=new Date();
+  const now = new Date();
   drawClock12(c1, now);
   drawClock24(c2, now);
   requestAnimationFrame(loop);
 }
-loop();
