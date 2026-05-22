@@ -2,23 +2,30 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
-  --black:  #080808;
-  --border: #2a2a2a;
-  --gray-2: #606060;
-  --clock-size: min(280px, 72vw);
+html, body {
+  width: 100%;
+  height: 100%;
+  background: #080808;
+  overflow-x: hidden;
 }
 
-html, body { width: 100%; height: 100%; background: var(--black); }
-
-#bg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; }
+#bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
 
 main {
-  position: relative; z-index: 1;
+  position: relative;
+  z-index: 1;
   min-height: 100vh;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   justify-content: center;
+  padding: 2rem;
+  gap: 0;
 }
 
 .clock-block {
@@ -26,52 +33,53 @@ main {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.2rem;
+  gap: 1.4rem;
   padding: 2.5rem 2rem;
   position: relative;
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: 420px;
+  /* PAS de width/height fixe ici — le JS gère la taille du canvas */
 }
 
 .clock-block::before {
-  content: ''; position: absolute; inset: 0;
-  background: rgba(8,8,8,0.62);
-  backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
-  border: 0.5px solid var(--border); border-radius: 2px; z-index: -1;
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(8,8,8,0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid #2a2a2a;
+  border-radius: 2px;
+  z-index: -1;
 }
 
-/* taille fixée en CSS, carrée, jamais rectangulaire */
-.clock {
+canvas#c1,
+canvas#c2 {
   display: block;
-  width: var(--clock-size);
-  height: var(--clock-size);
-  flex-shrink: 0;
+  /* taille posée par le JS — le CSS ne touche pas à width/height */
 }
 
 .label {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: clamp(0.85rem, 2.5vw, 1rem);
+  font-size: 1rem;
   letter-spacing: 0.22em;
-  color: var(--gray-2);
+  color: #606060;
   text-transform: uppercase;
   text-align: center;
-  flex-shrink: 0;
 }
 
 .legend {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px 12px;
-  flex-shrink: 0;
+  gap: 6px 16px;
 }
 
 .legend.invisible { visibility: hidden; }
 
 .legend-item {
-  display: flex; align-items: center; gap: 6px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
   font-family: 'DM Mono', monospace;
-  font-size: clamp(0.6rem, 2vw, 0.68rem);
+  font-size: 0.67rem;
   font-weight: 300;
   color: #555;
   white-space: nowrap;
@@ -80,58 +88,42 @@ main {
 .legend-item em {
   font-style: normal;
   color: #3a3a3a;
-  margin-left: 2px;
 }
 
 .dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  flex-shrink: 0; opacity: 0.85;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  opacity: 0.85;
 }
 
 .divider {
   width: 0.5px;
-  align-self: stretch;
-  background: linear-gradient(to bottom, transparent, var(--border), transparent);
+  height: 400px;
+  background: linear-gradient(to bottom, transparent, #2a2a2a, transparent);
   flex-shrink: 0;
+  align-self: center;
 }
 
-/* ── Tablette ── */
-@media (min-width: 601px) and (max-width: 900px) {
-  :root { --clock-size: min(240px, 38vw); }
-}
-
-/* ── Desktop large ── */
-@media (min-width: 901px) {
-  :root { --clock-size: 280px; }
-  main { align-items: center; }
-  .clock-block { flex: none; width: 380px; }
-  .divider { height: 420px; align-self: auto; }
-}
-
-/* ── Mobile : empilé ── */
-@media (max-width: 600px) {
-  :root { --clock-size: min(260px, 78vw); }
-
+/* Mobile */
+@media (max-width: 640px) {
   main {
     flex-direction: column;
-    align-items: center;
-    padding: 2rem 0;
-    gap: 0;
+    padding: 1.5rem 1rem;
+    gap: 1.5rem;
+    align-items: stretch;
   }
-
   .clock-block {
-    width: 100%;
-    max-width: 100%;
-    flex: none;
     padding: 2rem 1.5rem;
   }
-
-  .legend.invisible { display: none; }
-
+  .legend.invisible {
+    display: none;
+  }
   .divider {
-    width: min(240px, 70vw);
+    width: 60%;
     height: 0.5px;
+    background: linear-gradient(to right, transparent, #2a2a2a, transparent);
     align-self: center;
-    background: linear-gradient(to right, transparent, var(--border), transparent);
   }
 }
